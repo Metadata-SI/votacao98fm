@@ -148,6 +148,29 @@ escrito na própria enquete.
 O `POST /api/votos` também valida as escolhas contra a lista real de candidatos do cargo, para que ninguém
 infle a enquete chamando a API com um id inventado.
 
+## Senha do painel
+
+O painel (`/`) exige login. A enquete incorporada (`/enquete/:cargo`) e as rotas que ela consome
+(`/api/candidatos`, `/api/votos`) continuam **públicas** — quem entra ali é o ouvinte no site da rádio.
+
+```
+PAINEL_SENHA=...
+```
+
+A senha é conferida no servidor (`api/painel-sessao.ts`) e **nunca** entra no JavaScript do navegador. O
+que o cliente recebe é um cookie `HttpOnly` assinado com HMAC-SHA256, válido por 12h. A chave da
+assinatura é a própria senha, então **trocar a senha derruba todas as sessões abertas** — sem precisar de
+outra variável nem de tabela de sessões.
+
+Cuidados embutidos: comparação em tempo constante (não dá para descobrir a senha medindo o tempo de
+resposta), atraso fixo de 700ms em tentativa errada, e `Secure` no cookie fora do localhost.
+
+Sem a variável o painel abre sem login e mostra um aviso amarelo — assim ninguém fica trancado para fora
+por esquecer de configurar, mas o risco fica visível.
+
+> O que a senha protege é a **interface** do painel. Os dados em si (lista de candidatos do TSE, totais
+> das enquetes) seguem acessíveis pelas rotas públicas, porque a enquete incorporada depende delas.
+
 ## Incorporar no 98fmnatal.com.br
 
 No painel, clique em **Incorporar** no card do cargo. O diálogo deixa ajustar:
@@ -208,6 +231,8 @@ api/
   lib/tseCandidatos.ts     busca e normaliza os arquivos do TSE
   lib/votosStore.ts        Supabase (PostgREST) com fallback em memória
   lib/http.ts              contrato mínimo de req/res
+  painel-sessao.ts         login/logout do painel
+  lib/sessao.ts            senha, cookie assinado e validação
 
 shared/
   enquete-types.ts         tipos usados pela API e pelo front
@@ -221,6 +246,7 @@ src/
   pages/Enquete.tsx        a página do iframe
   components/CargoCard.tsx       card de cargo, com prévia
   components/RodapeParceria.tsx  assinatura das marcas (painel e enquete)
+  components/LoginPainel.tsx     tela de senha do painel
   components/EmbedDialog.tsx     gerador do código de incorporação
   components/EnqueteWidget.tsx   a votação em si
   components/CandidatoItem.tsx   linha de candidato

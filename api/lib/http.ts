@@ -8,6 +8,7 @@ export interface ApiRequest {
   method?: string;
   query?: Record<string, string | string[] | undefined>;
   body?: unknown;
+  headers?: Record<string, string | string[] | undefined>;
 }
 
 export interface ApiResponse {

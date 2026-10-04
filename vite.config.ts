@@ -10,7 +10,7 @@ import { componentTagger } from "lovable-tagger";
  * a Vercel oferece (req.query, req.body, res.status().json()). Assim o painel e
  * as enquetes rodam localmente sem precisar do `vercel dev`.
  */
-const ROTAS_API = ["resultado", "candidatos", "votos"] as const;
+const ROTAS_API = ["resultado", "candidatos", "votos", "painel-sessao"] as const;
 
 type ReqDev = IncomingMessage & { query?: Record<string, string>; body?: unknown };
 type ResDev = ServerResponse & {

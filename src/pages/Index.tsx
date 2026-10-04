@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { AlertTriangle, Code2, Database, LayoutGrid, RefreshCw, Vote } from 'lucide-react';
+import { AlertTriangle, Code2, Database, LayoutGrid, LogOut, RefreshCw, ShieldAlert, Vote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import CargoCard from '@/components/CargoCard';
 import EmbedDialog from '@/components/EmbedDialog';
 import RodapeParceria from '@/components/RodapeParceria';
+import LoginPainel from '@/components/LoginPainel';
+import { usePainelSessao } from '@/hooks/usePainelSessao';
 import { useCandidatos, useResultadoEnquete } from '@/hooks/useCandidatos';
 import { CARGOS_META, CARGOS_ORDEM, formatarNumero, type CargoMeta } from '@/lib/enquete';
 import metadataIcon from '@/assets/metadata-icon.png';
@@ -32,6 +34,22 @@ function Kpi({
 }
 
 export default function Index() {
+  const sessao = usePainelSessao();
+
+  if (sessao.carregando) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-9 h-9 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!sessao.autenticado) return <LoginPainel onEntrar={sessao.revalidar} />;
+
+  return <Painel sessao={sessao} />;
+}
+
+function Painel({ sessao }: { sessao: ReturnType<typeof usePainelSessao> }) {
   const { data, isLoading, isFetching, error, refetch } = useCandidatos();
   const [cargoParaIncorporar, setCargoParaIncorporar] = useState<CargoMeta | null>(null);
 
@@ -74,7 +92,18 @@ export default function Index() {
               </h1>
             </div>
           </div>
-          <img src={metadataLogoFull} alt="Metadata" className="object-contain w-24 sm:w-[120px] flex-shrink-0" />
+          <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+            <img src={metadataLogoFull} alt="Metadata" className="object-contain w-24 sm:w-[120px]" />
+            {sessao.senhaConfigurada && (
+              <>
+                <div className="h-6 w-px bg-border hidden sm:block" />
+                <Button variant="ghost" size="sm" onClick={sessao.sair} className="text-muted-foreground">
+                  <LogOut className="w-4 h-4 sm:mr-2" aria-hidden="true" />
+                  <span className="hidden sm:inline">Sair</span>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -139,6 +168,19 @@ export default function Index() {
                   <p className="text-xs text-muted-foreground mt-0.5">
                     O serviço do TSE não respondeu, então a lista vem do arquivo salvo no projeto. As enquetes
                     continuam funcionando normalmente.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {!sessao.senhaConfigurada && (
+              <div className="stat-card border-amber-300/60 bg-amber-50 flex items-start gap-3">
+                <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Painel sem senha</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Defina <code className="font-mono">PAINEL_SENHA</code> para exigir login. Sem essa
+                    variável, qualquer pessoa com o endereço abre este painel.
                   </p>
                 </div>
               </div>
