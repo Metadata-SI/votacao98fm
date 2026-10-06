@@ -7,11 +7,14 @@ import ResultadoEnqueteLista from '@/components/ResultadoEnqueteLista';
 import { useCandidatosDoCargo } from '@/hooks/useCandidatos';
 import {
   JaVotouError,
+  corDoCandidato,
+  ehSegundoTurno,
   enviarVoto,
   filtrarCandidatos,
   jaVotouLocalmente,
   marcarVotouLocalmente,
   obterEleitorId,
+  perguntaDoCargo,
   rotuloPosicao,
   type CargoMeta,
   type EscolhaVoto,
@@ -41,6 +44,7 @@ export default function EnqueteWidget({
   const candidatos = cargoDados?.candidatos ?? [];
 
   const posicoes = useMemo(() => Array.from({ length: meta.votos }, (_, i) => i + 1), [meta.votos]);
+  const segundoTurno = ehSegundoTurno(meta.slug);
 
   const [selecao, setSelecao] = useState<Selecao>({});
   const [termo, setTermo] = useState('');
@@ -195,16 +199,31 @@ export default function EnqueteWidget({
 
   const lista = meta.listaLonga ? filtrarCandidatos(candidatos, termo) : candidatos;
   const faltam = meta.votos - escolhidos.length;
+  // Cargo de voto único: o botão assume a cor de quem foi escolhido, o que em
+  // 2º turno deixa claro em quem o leitor está prestes a votar.
+  const corConfirmar =
+    meta.votos === 1
+      ? corDoCandidato(meta.slug, candidatos.find(c => c.id === selecao[1]), meta.cor)
+      : meta.cor;
 
   return (
     <div className="p-4 sm:p-5 space-y-4">
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1 min-w-0">
-          <h2 className="text-base sm:text-lg font-semibold text-foreground leading-snug">{meta.pergunta}</h2>
+          {segundoTurno && (
+            <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-foreground text-background">
+              2º turno
+            </span>
+          )}
+          <h2 className="text-base sm:text-lg font-semibold text-foreground leading-snug">
+            {perguntaDoCargo(meta)}
+          </h2>
           <p className="text-xs text-muted-foreground">
-            {meta.votos > 1
-              ? 'Escolha dois nomes: o 1º e o 2º voto. Não é possível votar duas vezes no mesmo candidato.'
-              : 'Escolha uma opção e confirme seu voto.'}
+            {segundoTurno
+              ? 'Disputa de 2º turno: só as duas candidaturas que seguem na eleição.'
+              : meta.votos > 1
+                ? 'Escolha dois nomes: o 1º e o 2º voto. Não é possível votar duas vezes no mesmo candidato.'
+                : 'Escolha uma opção e confirme seu voto.'}
           </p>
         </div>
         <img
@@ -279,7 +298,7 @@ export default function EnqueteWidget({
               <CandidatoItem
                 key={candidato.id}
                 candidato={candidato}
-                cor={meta.cor}
+                cor={corDoCandidato(meta.slug, candidato, meta.cor)}
                 selecionado={posicao !== null}
                 rotuloSelecao={posicao !== null ? rotuloPosicao(posicao, meta.votos) : undefined}
                 mostrarVinculados={!meta.listaLonga}
@@ -303,7 +322,7 @@ export default function EnqueteWidget({
           className="w-full"
           disabled={!completo || enviando}
           onClick={confirmar}
-          style={completo ? { backgroundColor: meta.cor } : undefined}
+          style={completo ? { backgroundColor: corConfirmar } : undefined}
         >
           {enviando ? (
             <>

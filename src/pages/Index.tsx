@@ -7,7 +7,7 @@ import RodapeParceria from '@/components/RodapeParceria';
 import LoginPainel from '@/components/LoginPainel';
 import { usePainelSessao } from '@/hooks/usePainelSessao';
 import { useCandidatos, useResultadoEnquete } from '@/hooks/useCandidatos';
-import { CARGOS_META, CARGOS_ORDEM, formatarNumero, type CargoMeta } from '@/lib/enquete';
+import { CARGOS_META, CARGOS_NO_PAINEL, formatarNumero, type CargoMeta } from '@/lib/enquete';
 import metadataIcon from '@/assets/metadata-icon.png';
 import metadataLogoFull from '@/assets/metadata-logo-new.png';
 
@@ -53,16 +53,13 @@ function Painel({ sessao }: { sessao: ReturnType<typeof usePainelSessao> }) {
   const { data, isLoading, isFetching, error, refetch } = useCandidatos();
   const [cargoParaIncorporar, setCargoParaIncorporar] = useState<CargoMeta | null>(null);
 
-  // Cada cargo tem a sua própria contagem, então são cinco consultas. Ficam
+  // Cada cargo tem a sua própria contagem, então é uma consulta por card. Ficam
   // escritas uma a uma de propósito: hook dentro de laço quebra a regra de
   // ordem estável dos hooks do React.
   const presidente = useResultadoEnquete('presidente');
   const governador = useResultadoEnquete('governador');
-  const senador = useResultadoEnquete('senador');
-  const deputadoFederal = useResultadoEnquete('deputado-federal');
-  const deputadoEstadual = useResultadoEnquete('deputado-estadual');
 
-  const apuracoes = [presidente, governador, senador, deputadoFederal, deputadoEstadual];
+  const apuracoes = [presidente, governador];
   const participantes = apuracoes.some(c => c.data)
     ? apuracoes.reduce((soma, c) => soma + (c.data?.totalParticipantes ?? 0), 0)
     : null;
@@ -73,10 +70,8 @@ function Painel({ sessao }: { sessao: ReturnType<typeof usePainelSessao> }) {
 
   const totalCandidatos = useMemo(() => {
     if (!data) return null;
-    return CARGOS_ORDEM.reduce((soma, cargo) => soma + (data.cargos[cargo]?.candidatos.length ?? 0), 0);
+    return CARGOS_NO_PAINEL.reduce((soma, cargo) => soma + (data.cargos[cargo]?.candidatos.length ?? 0), 0);
   }, [data]);
-
-  const atualizadoNaFonte = data?.cargos?.presidente?.atualizadoEm ?? null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -127,24 +122,19 @@ function Painel({ sessao }: { sessao: ReturnType<typeof usePainelSessao> }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              <Kpi title="Cargos em enquete" value={String(CARGOS_ORDEM.length)} sub="Um card e um embed por cargo" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <Kpi title="Cargos em enquete" value={String(CARGOS_NO_PAINEL.length)} sub="Um card e um embed por cargo" />
               <Kpi
                 title="Candidatos disponíveis"
                 value={totalCandidatos !== null ? formatarNumero(totalCandidatos) : '—'}
                 valueColor="hsl(222, 80%, 55%)"
-                sub="Somando os cinco cargos"
+                sub="Somando os cargos em enquete"
               />
               <Kpi
                 title="Participantes"
                 value={participantes !== null ? formatarNumero(participantes) : '—'}
                 valueColor="hsl(150, 45%, 42%)"
                 sub="Votos únicos em todas as enquetes"
-              />
-              <Kpi
-                title="Origem dos dados"
-                value={data?.origem === 'tse' ? 'TSE ao vivo' : data ? 'Retrato local' : '—'}
-                sub={atualizadoNaFonte ? `Fonte: ${atualizadoNaFonte}` : 'resultados.tse.jus.br'}
               />
             </div>
 
@@ -215,7 +205,7 @@ function Painel({ sessao }: { sessao: ReturnType<typeof usePainelSessao> }) {
             </div>
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {CARGOS_ORDEM.map(cargo => (
+              {CARGOS_NO_PAINEL.map(cargo => (
                 <CargoCard
                   key={cargo}
                   meta={CARGOS_META[cargo]}

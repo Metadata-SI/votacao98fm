@@ -1,6 +1,7 @@
 import { buscarCargo } from './lib/tseCandidatos.js';
 import { CANDIDATOS_SNAPSHOT } from '../shared/candidatosSnapshot.js';
 import { CARGO_SLUGS, type CandidatosPayload, type CargoSlug } from '../shared/enquete-types.js';
+import { aplicarSegundoTurno } from '../shared/segundoTurno.js';
 import type { ApiRequest, ApiResponse } from './lib/http.js';
 
 /*
@@ -8,6 +9,9 @@ import type { ApiRequest, ApiResponse } from './lib/http.js';
  * se algum falhar, usa o retrato em shared/candidatosSnapshot.ts para aquele
  * cargo — a enquete incorporada no site não pode ficar sem opções porque o
  * CDN do TSE oscilou.
+ *
+ * Antes de responder, o recorte de 2º turno (shared/segundoTurno.ts) é aplicado,
+ * de modo que o painel e a enquete incorporada vejam exatamente a mesma lista.
  */
 export default async function handler(req: ApiRequest, res: ApiResponse) {
   // Cache de 10 min na borda: a lista de candidatos praticamente não muda, e
@@ -26,10 +30,10 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const resultados = await Promise.all(
     alvos.map(async cargo => {
       try {
-        return { cargo, dados: await buscarCargo(cargo), doTse: true };
+        return { cargo, dados: aplicarSegundoTurno(await buscarCargo(cargo)), doTse: true };
       } catch (err) {
         console.error(`Falha ao buscar "${cargo}" no TSE, usando snapshot:`, err);
-        return { cargo, dados: CANDIDATOS_SNAPSHOT[cargo], doTse: false };
+        return { cargo, dados: aplicarSegundoTurno(CANDIDATOS_SNAPSHOT[cargo]), doTse: false };
       }
     }),
   );

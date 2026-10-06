@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useResultadoEnquete } from '@/hooks/useCandidatos';
 import {
+  corDoCandidato,
   formatarNumero,
   formatarPercentual,
   rotuloPosicao,
@@ -12,6 +13,7 @@ import {
 
 interface ResultadoEnqueteListaProps {
   cargo: CargoSlug;
+  /** Cor de apoio. Em 2º turno cada candidatura usa a sua, definida em shared/segundoTurno.ts. */
   cor: string;
   candidatos: Candidato[];
   /** Votos por eleitor — 2 no Senado, o que habilita a quebra 1º/2º voto. */
@@ -71,6 +73,7 @@ export default function ResultadoEnqueteLista({
       <ol className="space-y-2.5">
         {linhas.map((linha, indice) => {
           const candidato = porId.get(linha.candidatoId);
+          const corLinha = corDoCandidato(cargo, candidato, cor);
           // A barra é normalizada pela maior fatia para a leitura não ficar
           // achatada quando os percentuais são todos baixos (lista longa).
           const largura = maior > 0 ? (linha.percentual / maior) * 100 : 0;
@@ -87,7 +90,7 @@ export default function ResultadoEnqueteLista({
                     </span>
                   )}
                 </p>
-                <p className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: cor }}>
+                <p className="text-sm font-bold tabular-nums flex-shrink-0" style={{ color: corLinha }}>
                   {formatarPercentual(linha.percentual)}
                 </p>
               </div>
@@ -95,7 +98,7 @@ export default function ResultadoEnqueteLista({
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
-                  style={{ width: `${Math.max(largura, linha.votos > 0 ? 2 : 0)}%`, backgroundColor: cor }}
+                  style={{ width: `${Math.max(largura, linha.votos > 0 ? 2 : 0)}%`, backgroundColor: corLinha }}
                 />
               </div>
 

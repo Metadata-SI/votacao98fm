@@ -3,15 +3,22 @@
 Painel interno onde a redação da 98FM monta e acompanha as enquetes eleitorais, e gera o código para
 incorporá-las no **98fmnatal.com.br**.
 
-São cinco enquetes independentes, uma por cargo:
+Cada cargo tem a sua enquete, com contagem própria. O painel exibe hoje os dois cargos em 2º turno:
 
-| Cargo | Abrangência | Votos por leitor | Candidatos |
-| --- | --- | --- | --- |
-| Presidente | Brasil | 1 | 12 |
-| Governador | RN | 1 | 8 |
-| **Senador** | RN | **2 — 1º e 2º voto** | 13 |
-| Deputado Federal | RN | 1 | 99 |
-| Deputado Estadual | RN | 1 | 148 |
+| Cargo | Abrangência | Votos por leitor | Candidatos | No painel |
+| --- | --- | --- | --- | --- |
+| Presidente | Brasil | 1 | 2 (2º turno) | sim |
+| Governador | RN | 1 | 2 (2º turno) | sim |
+| **Senador** | RN | **2 — 1º e 2º voto** | 13 | não |
+| Deputado Federal | RN | 1 | 99 | não |
+| Deputado Estadual | RN | 1 | 148 | não |
+
+Quem aparece em cada cargo, e com que cor, está em `shared/segundoTurno.ts`. Cargo listado ali é
+recortado para os dois finalistas e ganha o selo "2º turno"; cargo ausente segue com a lista inteira.
+
+Quais cargos o painel mostra está em `CARGOS_NO_PAINEL`, em `src/lib/enquete.ts`. Tirar um cargo de lá
+só o esconde do painel — a rota `/enquete/<cargo>` e a API continuam respondendo, para não quebrar
+enquete já incorporada numa matéria publicada.
 
 O Senado do RN tem duas vagas em disputa, então a enquete de senador pede dois nomes: o leitor escolhe o
 1º e o 2º voto, e o mesmo candidato não pode receber os dois.

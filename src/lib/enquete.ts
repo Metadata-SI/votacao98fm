@@ -7,7 +7,10 @@ import type {
   ResultadoEnquete,
 } from '../../shared/enquete-types';
 
+import { ehSegundoTurno } from '../../shared/segundoTurno';
+
 export { CARGO_SLUGS } from '../../shared/enquete-types';
+export { corDoCandidato, ehSegundoTurno, finalistasDoCargo } from '../../shared/segundoTurno';
 export type { Candidato, CandidatosPayload, CargoCandidatos, CargoSlug, EscolhaVoto, ResultadoEnquete };
 
 /* ------------------------------ meta dos cargos ---------------------------- */
@@ -17,6 +20,8 @@ export interface CargoMeta {
   titulo: string;
   /** Pergunta que aparece no topo da enquete incorporada. */
   pergunta: string;
+  /** Usada no lugar de `pergunta` quando o cargo está em 2º turno. */
+  perguntaSegundoTurno?: string;
   /** Linha de apoio no card do painel. */
   descricao: string;
   abrangencia: string;
@@ -32,6 +37,7 @@ export const CARGOS_META: Record<CargoSlug, CargoMeta> = {
     slug: 'presidente',
     titulo: 'Presidente',
     pergunta: 'Se a eleição para Presidente fosse hoje, em quem você votaria?',
+    perguntaSegundoTurno: 'Se o 2º turno para Presidente fosse hoje, em quem você votaria?',
     descricao: 'Candidaturas de abrangência nacional',
     abrangencia: 'Brasil',
     votos: 1,
@@ -42,6 +48,7 @@ export const CARGOS_META: Record<CargoSlug, CargoMeta> = {
     slug: 'governador',
     titulo: 'Governador',
     pergunta: 'Se a eleição para Governador do RN fosse hoje, em quem você votaria?',
+    perguntaSegundoTurno: 'Se o 2º turno para o Governo do RN fosse hoje, em quem você votaria?',
     descricao: 'Candidaturas ao governo do estado',
     abrangencia: 'Rio Grande do Norte',
     votos: 1,
@@ -80,17 +87,30 @@ export const CARGOS_META: Record<CargoSlug, CargoMeta> = {
   },
 };
 
-export const CARGOS_ORDEM: CargoSlug[] = [
-  'presidente',
-  'governador',
-  'senador',
-  'deputado-federal',
-  'deputado-estadual',
-];
+/*
+ * Cargos que o painel exibe, na ordem dos cards.
+ *
+ * Tirar um cargo daqui só o esconde do painel: a rota /enquete/<cargo> e a API
+ * continuam respondendo, de modo que enquete já incorporada numa matéria antiga
+ * segue funcionando. Para desligar um cargo de verdade, é preciso removê-lo
+ * também de CARGO_SLUGS em shared/enquete-types.ts.
+ */
+export const CARGOS_NO_PAINEL: CargoSlug[] = ['presidente', 'governador'];
 
 export function metaDoCargo(slug: string | undefined): CargoMeta | null {
   if (!slug) return null;
   return CARGOS_META[slug as CargoSlug] ?? null;
+}
+
+/** Pergunta do topo da enquete, já considerando se o cargo está em 2º turno. */
+export function perguntaDoCargo(meta: CargoMeta): string {
+  if (ehSegundoTurno(meta.slug) && meta.perguntaSegundoTurno) return meta.perguntaSegundoTurno;
+  return meta.pergunta;
+}
+
+/** Linha de apoio do card — em 2º turno, diz isso em vez da abrangência. */
+export function descricaoDoCargo(meta: CargoMeta): string {
+  return ehSegundoTurno(meta.slug) ? '2º turno — apenas as duas candidaturas na disputa' : meta.descricao;
 }
 
 /** Rótulo de cada posição de voto. Só o Senado usa a forma ordinal. */
