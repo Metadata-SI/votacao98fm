@@ -175,7 +175,7 @@ export default function EmbedDialog({ meta, aberto, onFechar }: EmbedDialogProps
               />
               <span>
                 <span className="block text-sm font-medium text-foreground">
-                  Mostrar resultado parcial depois do voto
+                  Mostrar resultado parcial
                 </span>
                 <span className="block text-[11px] text-muted-foreground">
                   Desligue quando a redação não quiser expor a parcial durante a votação.

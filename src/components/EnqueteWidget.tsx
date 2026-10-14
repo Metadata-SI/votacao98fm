@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { AlertCircle, BarChart3, Loader2, Search, Vote } from 'lucide-react';
+import { AlertCircle, Loader2, Search, Vote } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import CandidatoItem from '@/components/CandidatoItem';
@@ -316,8 +316,8 @@ export default function EnqueteWidget({
         </p>
       )}
 
-      {/* Fica abaixo da faixa que rola, encostada no rodapé, sempre visível. */}
-      <div className="-mx-4 sm:-mx-5 px-4 sm:px-5 pt-3 pb-3 -mb-4 sm:-mb-5 bg-background border-t">
+      {/* Fica logo abaixo da faixa que rola, sempre visível. */}
+      <div className="-mx-4 sm:-mx-5 px-4 sm:px-5 pt-3 bg-background border-t">
         <Button
           className="w-full"
           disabled={!completo || enviando}
@@ -337,13 +337,19 @@ export default function EnqueteWidget({
             'Escolha um candidato para confirmar'
           )}
         </Button>
-        {mostrarResultado && (
-          <p className="text-[11px] text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
-            <BarChart3 className="w-3 h-3" aria-hidden="true" />
-            O resultado parcial aparece depois que você votar.
-          </p>
-        )}
       </div>
+
+      {/* Parcial visível antes do voto, para o leitor saber como está a disputa. */}
+      {mostrarResultado && (
+        <div className="pt-4 border-t max-h-[380px] overflow-y-auto pr-1 -mr-1">
+          <ResultadoEnqueteLista
+            cargo={meta.slug}
+            cor={meta.cor}
+            candidatos={candidatos}
+            votos={meta.votos}
+          />
+        </div>
+      )}
     </div>
   );
 }
